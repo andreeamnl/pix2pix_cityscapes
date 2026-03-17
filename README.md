@@ -1,262 +1,187 @@
-# pix2pix-tensorflow
+# pix2pix — Cityscapes Image Translation
 
-Based on [pix2pix](https://phillipi.github.io/pix2pix/) by Isola et al.
+This repository contains my implementation of **pix2pix image-to-image translation** using the Cityscapes dataset, translating segmentation maps into realistic street photos.
 
-[Article about this implemention](https://affinelayer.com/pix2pix/)
+This was done as part of a university lab assignment exploring conditional Generative Adversarial Networks (cGANs).
 
-[Interactive Demo](https://affinelayer.com/pixsrv/)
+---
 
-Tensorflow implementation of pix2pix.  Learns a mapping from input images to output images, like these examples from the original paper:
+## Base Repository
 
-<img src="docs/examples.jpg" width="900px"/>
+This project builds on the TensorFlow implementation of pix2pix by Christopher Hesse:
 
-This port is based directly on the torch implementation, and not on an existing Tensorflow implementation.  It is meant to be a faithful implementation of the original work and so does not add anything.  The processing speed on a GPU with cuDNN was equivalent to the Torch implementation in testing.
+> https://github.com/affinelayer/pix2pix-tensorflow
+
+---
 
 ## Setup
 
-### Prerequisites
-- Tensorflow 1.4.1
+### 1. Clone the repository
 
-### Recommended
-- Linux with Tensorflow GPU edition + cuDNN
-
-### Getting Started
-
-```sh
-# clone this repo
-git clone https://github.com/affinelayer/pix2pix-tensorflow.git
+```bash
+git clone https://github.com/affinelayer/pix2pix-tensorflow
 cd pix2pix-tensorflow
-# download the CMP Facades dataset (generated from http://cmp.felk.cvut.cz/~tylecr1/facade/)
-python tools/download-dataset.py facades
-# train the model (this may take 1-8 hours depending on GPU, on CPU you will be waiting for a bit)
-python pix2pix.py \
-  --mode train \
-  --output_dir facades_train \
-  --max_epochs 200 \
-  --input_dir facades/train \
-  --which_direction BtoA
-# test the model
-python pix2pix.py \
-  --mode test \
-  --output_dir facades_test \
-  --input_dir facades/val \
-  --checkpoint facades_train
 ```
 
-The test run will output an HTML file at `facades_test/index.html` that shows input/output/target image sets.
+### 2. Create and activate a virtual environment
 
-If you have Docker installed, you can use the provided Docker image to run pix2pix without installing the correct version of Tensorflow:
-
-```sh
-# train the model
-python tools/dockrun.py python pix2pix.py \
-      --mode train \
-      --output_dir facades_train \
-      --max_epochs 200 \
-      --input_dir facades/train \
-      --which_direction BtoA
-# test the model
-python tools/dockrun.py python pix2pix.py \
-      --mode test \
-      --output_dir facades_test \
-      --input_dir facades/val \
-      --checkpoint facades_train
+```bash
+~/.pyenv/versions/3.10.12/bin/python -m venv ~/pix2pix-venv
+source ~/pix2pix-venv/bin/activate
 ```
 
-## Datasets and Trained Models
+### 3. Install TensorFlow for Apple Silicon
 
-The data format used by this program is the same as the original pix2pix format, which consists of images of input and desired output side by side like:
-
-<img src="docs/ab.png" width="256px"/>
-
-For example:
-
-<img src="docs/418.png" width="256px"/>
-
-Some datasets have been made available by the authors of the pix2pix paper.  To download those datasets, use the included script `tools/download-dataset.py`.  There are also links to pre-trained models alongside each dataset, note that these pre-trained models require the current version of pix2pix.py:
-
-| dataset | example |
-| --- | --- |
-| `python tools/download-dataset.py facades` <br> 400 images from [CMP Facades dataset](http://cmp.felk.cvut.cz/~tylecr1/facade/). (31MB) <br> Pre-trained: [BtoA](https://mega.nz/#!H0AmER7Y!pBHcH4M11eiHBmJEWvGr-E_jxK4jluKBUlbfyLSKgpY)  | <img src="docs/facades.jpg" width="256px"/> |
-| `python tools/download-dataset.py cityscapes` <br> 2975 images from the [Cityscapes training set](https://www.cityscapes-dataset.com/). (113M) <br> Pre-trained: [AtoB](https://mega.nz/#!K1hXlbJA!rrZuEnL3nqOcRhjb-AnSkK0Ggf9NibhDymLOkhzwuQk) [BtoA](https://mega.nz/#!y1YxxB5D!1817IXQFcydjDdhk_ILbCourhA6WSYRttKLrGE97q7k) | <img src="docs/cityscapes.jpg" width="256px"/> |
-| `python tools/download-dataset.py maps` <br> 1096 training images scraped from Google Maps (246M) <br> Pre-trained: [AtoB](https://mega.nz/#!7oxklCzZ!8fRZoF3jMRS_rylCfw2RNBeewp4DFPVE_tSCjCKr-TI) [BtoA](https://mega.nz/#!S4AGzQJD!UH7B5SV7DJSTqKvtbFKqFkjdAh60kpdhTk9WerI-Q1I) | <img src="docs/maps.jpg" width="256px"/> |
-| `python tools/download-dataset.py edges2shoes` <br> 50k training images from [UT Zappos50K dataset](http://vision.cs.utexas.edu/projects/finegrained/utzap50k/). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. (2.2GB) <br> Pre-trained: [AtoB](https://mega.nz/#!u9pnmC4Q!2uHCZvHsCkHBJhHZ7xo5wI-mfekTwOK8hFPy0uBOrb4) | <img src="docs/edges2shoes.jpg" width="256px"/>  |
-| `python tools/download-dataset.py edges2handbags` <br> 137K Amazon Handbag images from [iGAN project](https://github.com/junyanz/iGAN). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. (8.6GB) <br> Pre-trained: [AtoB](https://mega.nz/#!G1xlDCIS!sFDN3ZXKLUWU1TX6Kqt7UG4Yp-eLcinmf6HVRuSHjrM) | <img src="docs/edges2handbags.jpg" width="256px"/> |
-
-The `facades` dataset is the smallest and easiest to get started with.
-
-### Creating your own dataset
-
-#### Example: creating images with blank centers for [inpainting](https://people.eecs.berkeley.edu/~pathak/context_encoder/)
-
-<img src="docs/combine.png" width="900px"/>
-
-```sh
-# Resize source images
-python tools/process.py \
-  --input_dir photos/original \
-  --operation resize \
-  --output_dir photos/resized
-# Create images with blank centers
-python tools/process.py \
-  --input_dir photos/resized \
-  --operation blank \
-  --output_dir photos/blank
-# Combine resized images with blanked images
-python tools/process.py \
-  --input_dir photos/resized \
-  --b_dir photos/blank \
-  --operation combine \
-  --output_dir photos/combined
-# Split into train/val set
-python tools/split.py \
-  --dir photos/combined
+```bash
+pip install --upgrade pip
+pip install tensorflow-macos==2.12.0
+pip install tensorflow-metal==0.8.0
 ```
 
-The folder `photos/combined` will now have `train` and `val` subfolders that you can use for training and testing.
+### 4. Download the Cityscapes dataset
 
-#### Creating image pairs from existing images
-
-If you have two directories `a` and `b`, with corresponding images (same name, same dimensions, different data) you can combine them with `process.py`:
-
-```sh
-python tools/process.py \
-  --input_dir a \
-  --b_dir b \
-  --operation combine \
-  --output_dir c
+```bash
+python tools/download-dataset.py cityscapes
 ```
 
-This puts the images in a side-by-side combined image that `pix2pix.py` expects.
-
-#### Colorization
-
-For colorization, your images should ideally all be the same aspect ratio.  You can resize and crop them with the resize command:
-```sh
-python tools/process.py \
-  --input_dir photos/original \
-  --operation resize \
-  --output_dir photos/resized
-```
-
-No other processing is required, the colorization mode (see Training section below) uses single images instead of image pairs.
+---
 
 ## Training
 
-### Image Pairs
+Due to hardware constraints (MacBook Air M1, 8GB RAM, no fan), training was done on a **1,000 image subset** of the full 2,975 image dataset for **18 epochs**. This took approximately **3 hours** on Apple Silicon with Metal GPU acceleration.
 
-For normal training with image pairs, you need to specify which directory contains the training images, and which direction to train on.  The direction options are `AtoB` or `BtoA`
-```sh
+Full training (2,975 images, 200 epochs) would take an estimated **35+ hours** on the same hardware.
+
+```bash
+# Create 1k subset
+mkdir -p cityscapes_small/train
+ls cityscapes/train | head -1000 | xargs -I {} cp cityscapes/train/{} cityscapes_small/train/
+
+
 python pix2pix.py \
   --mode train \
-  --output_dir facades_train \
-  --max_epochs 200 \
-  --input_dir facades/train \
+  --output_dir cityscapes_train \
+  --max_epochs 18 \
+  --input_dir cityscapes_small/train \
   --which_direction BtoA
 ```
 
-### Colorization
-
-`pix2pix.py` includes special code to handle colorization with single images instead of pairs, using that looks like this:
-
-```sh
-python pix2pix.py \
-  --mode train \
-  --output_dir photos_train \
-  --max_epochs 200 \
-  --input_dir photos/train \
-  --lab_colorization
-```
-
-In this mode, image A is the black and white image (lightness only), and image B contains the color channels of that image (no lightness information).
-
-### Tips
-
-You can look at the loss and computation graph using tensorboard:
-```sh
-tensorboard --logdir=facades_train
-```
-
-<img src="docs/tensorboard-scalar.png" width="250px"/> <img src="docs/tensorboard-image.png" width="250px"/> <img src="docs/tensorboard-graph.png" width="250px"/>
-
-If you wish to write in-progress pictures as the network is training, use `--display_freq 50`.  This will update `facades_train/index.html` every 50 steps with the current training inputs and outputs.
+---
 
 ## Testing
 
-Testing is done with `--mode test`.  You should specify the checkpoint to use with `--checkpoint`, this should point to the `output_dir` that you created previously with `--mode train`:
+### On the official Cityscapes validation set (500 images):
 
-```sh
+```bash
 python pix2pix.py \
   --mode test \
-  --output_dir facades_test \
-  --input_dir facades/val \
-  --checkpoint facades_train
+  --output_dir cityscapes_test \
+  --input_dir cityscapes/val \
+  --checkpoint cityscapes_train
 ```
 
-The testing mode will load some of the configuration options from the checkpoint provided so you do not need to specify `which_direction` for instance.
+### On 5 personal photos:
 
-The test run will output an HTML file at `facades_test/index.html` that shows input/output/target image sets:
-
-<img src="docs/test-html.png" width="300px"/>
-
-## Code Validation
-
-Validation of the code was performed on a Linux machine with a ~1.3 TFLOPS Nvidia GTX 750 Ti GPU and an Azure NC6 instance with a K80 GPU.
-
-```sh
-git clone https://github.com/affinelayer/pix2pix-tensorflow.git
-cd pix2pix-tensorflow
-python tools/download-dataset.py facades
-sudo nvidia-docker run \
-  --volume $PWD:/prj \
-  --workdir /prj \
-  --env PYTHONUNBUFFERED=x \
-  affinelayer/pix2pix-tensorflow \
-    python pix2pix.py \
-      --mode train \
-      --output_dir facades_train \
-      --max_epochs 200 \
-      --input_dir facades/train \
-      --which_direction BtoA
-sudo nvidia-docker run \
-  --volume $PWD:/prj \
-  --workdir /prj \
-  --env PYTHONUNBUFFERED=x \
-  affinelayer/pix2pix-tensorflow \
-    python pix2pix.py \
-      --mode test \
-      --output_dir facades_test \
-      --input_dir facades/val \
-      --checkpoint facades_train
+```bash
+python pix2pix.py \
+  --mode test \
+  --output_dir my_photos/results \
+  --input_dir my_photos/combined \
+  --checkpoint cityscapes_train
 ```
 
-Comparison on facades dataset:
+---
 
-| Input | Tensorflow | Torch | Target |
-| --- | --- | --- | --- |
-| <img src="docs/1-inputs.png" width="256px"> | <img src="docs/1-tensorflow.png" width="256px"> | <img src="docs/1-torch.jpg" width="256px"> | <img src="docs/1-targets.png" width="256px"> |
-| <img src="docs/5-inputs.png" width="256px"> | <img src="docs/5-tensorflow.png" width="256px"> | <img src="docs/5-torch.jpg" width="256px"> | <img src="docs/5-targets.png" width="256px"> |
-| <img src="docs/51-inputs.png" width="256px"> | <img src="docs/51-tensorflow.png" width="256px"> | <img src="docs/51-torch.jpg" width="256px"> | <img src="docs/51-targets.png" width="256px"> |
-| <img src="docs/95-inputs.png" width="256px"> | <img src="docs/95-tensorflow.png" width="256px"> | <img src="docs/95-torch.jpg" width="256px"> | <img src="docs/95-targets.png" width="256px"> |
+## Results
 
-## Unimplemented Features
+### Scores
 
-The following models have not been implemented:
-- defineG_encoder_decoder
-- defineG_unet_128
-- defineD_pixelGAN
+| Test Set                    | L1 Score | Notes                                               |
+| --------------------------- | -------- | --------------------------------------------------- |
+| Cityscapes val (500 images) | 0.1416   | 3x worse than paper (~0.05) due to reduced training |
+| Personal photos (5 images)  | 0.3087   | High score due to domain mismatch                   |
 
-## Citation
-If you use this code for your research, please cite the paper this code is based on: <a href="https://arxiv.org/pdf/1611.07004v1.pdf">Image-to-Image Translation Using Conditional Adversarial Networks</a>:
+The gap from the paper benchmark is directly attributable to computational constraints — 33% of training data and 9% of recommended epochs — rather than architectural issues.
 
-```
-@article{pix2pix2016,
-  title={Image-to-Image Translation with Conditional Adversarial Networks},
-  author={Isola, Phillip and Zhu, Jun-Yan and Zhou, Tinghui and Efros, Alexei A},
-  journal={arxiv},
-  year={2016}
-}
-```
+The high L1 score on personal photos demonstrates a key pix2pix limitation: **the model cannot generalize beyond its training domain**.
 
-## Acknowledgments
-This is a port of [pix2pix](https://github.com/phillipi/pix2pix) from Torch to Tensorflow.  It also contains colorspace conversion code ported from Torch.  Thanks to the Tensorflow team for making such a quality library!  And special thanks to Phillip Isola for answering my questions about the pix2pix code.
+---
+
+## Cityscapes Validation Results (sample)
+
+Each row shows: **input segmentation map | generated photo | real photo**
+
+### Sample 1
+
+| Input                                    | Output                                    | Target                                    |
+| ---------------------------------------- | ----------------------------------------- | ----------------------------------------- |
+| ![](cityscapes_test/images/1-inputs.png) | ![](cityscapes_test/images/1-outputs.png) | ![](cityscapes_test/images/1-targets.png) |
+
+### Sample 2
+
+| Input                                     | Output                                     | Target                                     |
+| ----------------------------------------- | ------------------------------------------ | ------------------------------------------ |
+| ![](cityscapes_test/images/10-inputs.png) | ![](cityscapes_test/images/10-outputs.png) | ![](cityscapes_test/images/10-targets.png) |
+
+### Sample 3
+
+| Input                                      | Output                                      | Target                                      |
+| ------------------------------------------ | ------------------------------------------- | ------------------------------------------- |
+| ![](cityscapes_test/images/100-inputs.png) | ![](cityscapes_test/images/100-outputs.png) | ![](cityscapes_test/images/100-targets.png) |
+
+### Sample 4
+
+| Input                                      | Output                                      | Target                                      |
+| ------------------------------------------ | ------------------------------------------- | ------------------------------------------- |
+| ![](cityscapes_test/images/101-inputs.png) | ![](cityscapes_test/images/101-outputs.png) | ![](cityscapes_test/images/101-targets.png) |
+
+### Sample 5
+
+| Input                                      | Output                                      | Target                                      |
+| ------------------------------------------ | ------------------------------------------- | ------------------------------------------- |
+| ![](cityscapes_test/images/102-inputs.png) | ![](cityscapes_test/images/102-outputs.png) | ![](cityscapes_test/images/102-targets.png) |
+
+---
+
+## Personal Photo Results
+
+Each row shows: **input (segmented) | generated output | original photo**
+
+### Photo 1
+
+| Input                                             | Output                                             | Target                                             |
+| ------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| ![](my_photos/results/images/IMG_0107-inputs.png) | ![](my_photos/results/images/IMG_0107-outputs.png) | ![](my_photos/results/images/IMG_0107-targets.png) |
+
+### Photo 2
+
+| Input                                             | Output                                             | Target                                             |
+| ------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| ![](my_photos/results/images/IMG_3541-inputs.png) | ![](my_photos/results/images/IMG_3541-outputs.png) | ![](my_photos/results/images/IMG_3541-targets.png) |
+
+### Photo 3
+
+| Input                                             | Output                                             | Target                                             |
+| ------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| ![](my_photos/results/images/IMG_3601-inputs.png) | ![](my_photos/results/images/IMG_3601-outputs.png) | ![](my_photos/results/images/IMG_3601-targets.png) |
+
+### Photo 4
+
+| Input                                             | Output                                             | Target                                             |
+| ------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| ![](my_photos/results/images/IMG_5185-inputs.png) | ![](my_photos/results/images/IMG_5185-outputs.png) | ![](my_photos/results/images/IMG_5185-targets.png) |
+
+### Photo 5
+
+| Input                                             | Output                                             | Target                                             |
+| ------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| ![](my_photos/results/images/IMG_5281-inputs.png) | ![](my_photos/results/images/IMG_5281-outputs.png) | ![](my_photos/results/images/IMG_5281-targets.png) |
+
+---
+
+## Reference
+
+> Image-to-Image Translation with Conditional Adversarial Networks  
+> Phillip Isola, Jun-Yan Zhu, Tinghui Zhou, Alexei A. Efros  
+> CVPR 2017  
+> https://arxiv.org/abs/1611.07004
